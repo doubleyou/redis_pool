@@ -91,8 +91,6 @@ stop(Pid) ->
 init([Opts]) ->
     io:format("init redis worker: ~p~n", [self()]),
     State = parse_options(Opts, #state{}),
-    init(State);
-init(State) ->
     case redis_net:connect(State#state.ip, State#state.port, State#state.pass) of
         {ok, Socket} ->
             {ok, State#state{socket=Socket}};
@@ -118,16 +116,10 @@ handle_call({q, Parts}, _From, #state{socket=Socket, ip=Ip, port=Port, pass=Pass
             {reply, Reply, State#state{socket=NewSocket}}
     end;
 
-handle_call({sub, Channel, Callback}, From, #state{socket=Socket}=State) ->
+handle_call({sub, Channel, Callback}, _From, State) ->
     case spawn_subscriber(Channel, Callback, State) of
-        {ok, Pid} -> 
-            gen_tcp:controlling_process(Socket, Pid),
-            case init(State) of
-                {ok, NewState} ->
-                    {reply, ok, NewState};
-                {error, Error} ->
-                    {stop, Error, State}
-            end;
+        {ok, _Pid} -> 
+            {reply, ok, State};
         {error, Error} ->
             {stop, Error, State}
     end;

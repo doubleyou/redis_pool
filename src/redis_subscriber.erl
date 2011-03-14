@@ -25,13 +25,18 @@ start_link(Opts) ->
     },
     {ok, proc_lib:spawn_link(fun() -> init(State) end)}.
 
-init(#state{socket=Socket, channel=Channel, ip=Ip, pass=Pass, port=Port}=State) ->
-    Packet = redis_proto:build(["subscribe", Channel]),
-    case redis_net:send_recv(Socket, Ip, Port, Pass, Packet, 1) of
-        {error, Error} ->
-            {stop, Error, State};
-        {_Reply, NewSocket} ->
-            loop(State#state{socket=NewSocket})
+init(#state{channel=Channel, ip=Ip, pass=Pass, port=Port}=State) ->
+    case redis_net:connect(Ip, Port, Pass) of
+        {ok, Socket} ->
+            Packet = redis_proto:build(["subscribe", Channel]),
+            case redis_net:send_recv(Socket, Ip, Port, Pass, Packet, 1) of
+                {error, Error} ->
+                    {stop, Error, State};
+                {_Reply, NewSocket} ->
+                    loop(State#state{socket=NewSocket})
+            end;
+        Error ->
+            {stop, Error}
     end.
 
 loop(#state{socket=Socket, channel=Channel, callback=Callback}=State) ->
