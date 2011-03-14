@@ -1,9 +1,17 @@
 -module(redis_subscriber).
 -export([
+    subscribe/2,
+    subscribe/3,
     start_link/1
 ]).
 
 -include_lib("../include/redis.hrl").
+
+subscribe(Channel, Callback) ->
+    subscribe(Channel, Callback, []).
+
+subscribe(Channel, Callback, Opts) ->
+    redis_subscribers_sup:start_child([{channel, Channel}, {callback, Callback} | Opts]).
 
 start_link(Opts) ->
     State = redis_util:parse_options(Opts),
@@ -29,6 +37,7 @@ loop(#state{socket=Socket, callback=Callback}=State) ->
             init(State);
         [<<"message">>, _BChannel, Message] ->
             case Callback of
+                {M, F, A} -> erlang:apply(M, F, [Message | A]);
                 {M, F} -> erlang:apply(M, F, [Message]);
                 Fun -> Fun(Message)
             end

@@ -24,16 +24,19 @@
 -behaviour(gen_server).
 
 %% gen_server callbacks
--export([start_link/1, start_link/2, init/1, handle_call/3,
-          handle_cast/2, handle_info/2, terminate/2, code_change/3]).
+-export([start_link/0, start_link/1, start_link/2, init/1, handle_call/3,
+          handle_cast/2, handle_info/2, terminate/2, code_change/3, stop/1]).
 
--compile(export_all).
+-export([q/2, q/3]).
 
 -include_lib("../include/redis.hrl").
 
 -define(TIMEOUT, 5000).
 
 %% API functions
+start_link() ->
+    start_link([]).
+
 start_link(Opts) ->
     gen_server:start_link(?MODULE, [Opts], []).
 
@@ -59,9 +62,6 @@ q(Pid, Parts, Timeout) ->
         Reply ->
             Reply
     end.
-
-sub(Channel, Callback, Opts) ->
-    redis_subscribers_sup:start_child([{channel, Channel}, {callback, Callback} | Opts]).
 
 stop(Pid) ->
     gen_server:cast(Pid, {stop, normal}).
