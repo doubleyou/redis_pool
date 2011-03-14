@@ -29,7 +29,7 @@
 
 -compile(export_all).
 
--record(state, {ip = "127.0.0.1", port = 6379, db = 0, pass, socket}).
+-include_lib("../include/redis.hrl").
 
 -define(TIMEOUT, 5000).
 
@@ -79,7 +79,7 @@ stop(Pid) ->
 %%--------------------------------------------------------------------
 init([Opts]) ->
     io:format("init redis worker: ~p~n", [self()]),
-    State = parse_options(Opts, #state{}),
+    State = redis_util:parse_options(Opts),
     case redis_net:connect(State#state.ip, State#state.port, State#state.pass) of
         {ok, Socket} ->
             {ok, State#state{socket=Socket}};
@@ -146,18 +146,3 @@ terminate(_Reason, State) ->
 %%--------------------------------------------------------------------
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
-
-%%--------------------------------------------------------------------
-%% Internal functions
-%%--------------------------------------------------------------------
-
-parse_options([], State) ->
-    State;
-parse_options([{ip, Ip} | Rest], State) ->
-    parse_options(Rest, State#state{ip = Ip});
-parse_options([{port, Port} | Rest], State) ->
-    parse_options(Rest, State#state{port = Port});
-parse_options([{db, Db} | Rest], State) ->
-    parse_options(Rest, State#state{db = Db});
-parse_options([{pass, Pass} | Rest], State) ->
-    parse_options(Rest, State#state{pass = Pass}).

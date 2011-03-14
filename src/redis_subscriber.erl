@@ -3,26 +3,10 @@
     start_link/1
 ]).
 
--record(state, {
-    ip,
-    port,
-    pass,
-    db,
-    socket,
-    channel,
-    callback
-}).
+-include_lib("../include/redis.hrl").
 
 start_link(Opts) ->
-    State = #state{
-        ip = proplists:get_value(ip, Opts, "127.0.0.1"),
-        port = proplists:get_value(port, Opts, 6379),
-        pass = proplists:get_value(pass, Opts),
-        db = proplists:get_value(db, Opts, 0),
-        socket = proplists:get_value(socket, Opts),
-        channel = proplists:get_value(channel, Opts),
-        callback = proplists:get_value(callback, Opts)
-    },
+    State = redis_util:parse_options(Opts),
     {ok, proc_lib:spawn_link(fun() -> init(State) end)}.
 
 init(#state{channel=Channel, ip=Ip, pass=Pass, port=Port}=State) ->
