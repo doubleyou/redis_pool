@@ -66,23 +66,25 @@ read_resp(Socket, PipelinedPacketCount, Acc) ->
     read_resp(Socket, PipelinedPacketCount-1, [read_resp(Socket)|Acc]).
 
 read_resp(Socket) ->
-    inet:setopts(Socket, [{packet, line}]),
-    case gen_tcp:recv(Socket, 0) of
-        {ok, <<"+", Rest/binary>>} ->
+    inet:setopts(Socket, [{packet, line}, {active, once}]),
+    receive
+        {tcp, Socket, <<"+", Rest/binary>>} ->
             strip_nl(Rest);
-        {ok, <<"-", Rest/binary>>} ->
+        {tcp, Socket, <<"-", Rest/binary>>} ->
             {redis_error, strip_nl(Rest)};
-        {ok, <<":", Rest/binary>>} ->
+        {tcp, Socket, <<":", Rest/binary>>} ->
             redis_util:binary_to_int(strip_nl(Rest));
-        {ok, <<"$", Size/binary>>} ->
+        {tcp, Socket, <<"$", Size/binary>>} ->
             Size1 = redis_util:binary_to_int(strip_nl(Size)),
             read_body(Socket, Size1);
-        {ok, <<"*", Rest/binary>>} ->
+        {tcp, Socket, <<"*", Rest/binary>>} ->
             Count = redis_util:binary_to_int(strip_nl(Rest)),
             read_multi_bulk(Socket, Count, []);
-        {error, Err} ->
+        {tcp_error, Socket, Err} ->
             disconnect(Socket),
-            {error, Err}
+            {error, Err};
+        {tcp_closed, Socket} ->
+            {error, disconnected}
     end.
 
 read_body(_Socket, -1) ->
@@ -91,15 +93,15 @@ read_body(_Socket, -1) ->
 read_body(Socket, Size) ->
     inet:setopts(Socket, [{packet, raw}]),
     case gen_tcp:recv(Socket, Size + size(?NL)) of
-        {error, Error} ->
+        {error, Err} ->
             disconnect(Socket),
-            {error, Error};
+            {error, Err};
         {ok, <<Body:Size/binary, _/binary>>} ->
             Body
     end.
 
 read_multi_bulk(_Socket, 0, Acc) ->
-    lists:reverse(Acc);
+    lists:reverse(lists:flatten((Acc)));
 
 read_multi_bulk(Socket, Count, Acc) ->
     Resp =
