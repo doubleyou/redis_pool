@@ -73,13 +73,12 @@ read_resp(Socket) ->
         {ok, <<"-", Rest/binary>>} ->
             {redis_error, strip_nl(Rest)};
         {ok, <<":", Rest/binary>>} ->
-            Int = strip_nl(Rest),
-            list_to_integer(binary_to_list(Int));
+            redis_util:binary_to_int(strip_nl(Rest));
         {ok, <<"$", Size/binary>>} ->
-            Size1 = list_to_integer(binary_to_list(strip_nl(Size))),
+            Size1 = redis_util:binary_to_int(strip_nl(Size)),
             read_body(Socket, Size1);
         {ok, <<"*", Rest/binary>>} ->
-            Count = list_to_integer(binary_to_list(strip_nl(Rest))),
+            Count = redis_util:binary_to_int(strip_nl(Rest)),
             read_multi_bulk(Socket, Count, []);
         {error, Err} ->
             disconnect(Socket),

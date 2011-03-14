@@ -1,10 +1,14 @@
 -module(redis_util).
 -export([
+    binary_to_int/1,
     parse_options/1,
     parse_options/2
 ]).
 
 -include_lib("../include/redis.hrl").
+
+binary_to_int(B) when is_binary(B) ->
+    list_to_integer(binary_to_list(B)).
 
 parse_options(Opts) ->
     parse_options(Opts, #state{}).

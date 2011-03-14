@@ -35,6 +35,8 @@ loop(#state{socket=Socket, callback=Callback}=State) ->
     case redis_net:read_resp(Socket) of
         {error, _} ->
             init(State);
+        {redis_error, _} ->
+            init(State);
         [<<"message">>, _BChannel, Message] ->
             case Callback of
                 {M, F, A} -> erlang:apply(M, F, [Message | A]);

@@ -5,5 +5,5 @@ all:
 clean:
 	rebar clean
 
-test:
+test: all
 	rebar eunit
