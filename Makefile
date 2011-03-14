@@ -1,6 +1,9 @@
 all: 
-	@erl -make
+	rebar compile
 	@escript release/build_rel.escript boot redis `pwd`/ebin
 
 clean:
-	rm -f ebin/*.beam
+	rebar clean
+
+test:
+	rebar eunit

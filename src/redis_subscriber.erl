@@ -23,7 +23,7 @@ init(#state{channel=Channel, ip=Ip, pass=Pass, port=Port}=State) ->
             {stop, Error}
     end.
 
-loop(#state{socket=Socket, channel=Channel, callback=Callback}=State) ->
+loop(#state{socket=Socket, callback=Callback}=State) ->
     case redis_net:read_resp(Socket) of
         {error, _} ->
             init(State);
