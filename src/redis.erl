@@ -60,19 +60,8 @@ q(Pid, Parts, Timeout) ->
             Reply
     end.
 
-sub(Pid, Channel, Callback) ->
-    sub(Pid, Channel, Callback, ?TIMEOUT).
-
-sub(Pid, Channel, Callback, Timeout) ->
-    case catch gen_server:call(Pid, {sub, Channel, Callback}, Timeout) of
-        {'EXIT', {timeout, {gen_server, call, _}}} ->
-            gen_server:cast(Pid, {stop, timeout}),
-            {error, timeout};
-        {'EXIT', {Error,   {gen_server, call, _}}} ->
-            {error, Error};
-        Reply ->
-            Reply
-    end.
+sub(Channel, Callback, Opts) ->
+    redis_subscribers_sup:start_child([{channel, Channel}, {callback, Callback} | Opts]).
 
 stop(Pid) ->
     gen_server:cast(Pid, {stop, normal}).
@@ -114,14 +103,6 @@ handle_call({q, Parts}, _From, #state{socket=Socket, ip=Ip, port=Port, pass=Pass
             {stop, Error, State};
         {Reply, NewSocket} ->
             {reply, Reply, State#state{socket=NewSocket}}
-    end;
-
-handle_call({sub, Channel, Callback}, _From, State) ->
-    case spawn_subscriber(Channel, Callback, State) of
-        {ok, _Pid} -> 
-            {reply, ok, State};
-        {error, Error} ->
-            {stop, Error, State}
     end;
 
 handle_call(_Msg, _From, State) ->
@@ -169,18 +150,6 @@ code_change(_OldVsn, State, _Extra) ->
 %%--------------------------------------------------------------------
 %% Internal functions
 %%--------------------------------------------------------------------
-
-spawn_subscriber(Channel, Callback, #state{ip=IP, pass=Pass, socket=Socket, db=DB, port=Port}) ->
-    Opts = [
-        {ip, IP},
-        {pass, Pass},
-        {socket, Socket},
-        {db, DB},
-        {port, Port},
-        {channel, Channel},
-        {callback, Callback}
-    ],
-    redis_subscribers_sup:start_child(Opts).
 
 parse_options([], State) ->
     State;
