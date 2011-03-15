@@ -32,6 +32,7 @@
 
 start() ->
     application:start(sasl),
+    application:start(crypto),
     application:start(redis).
 
 start(_Type, _StartArgs) ->
