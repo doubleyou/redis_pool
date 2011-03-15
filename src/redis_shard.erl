@@ -118,7 +118,8 @@ code_change(_OldVsn, State, _Extra) ->
 %% Internal functions
 %%--------------------------------------------------------------------
 key_to_index(Key) ->
-    erlang:phash2(Key, ?TOTAL_INTERVAL).
+    <<Index:128/big-unsigned-integer>> = crypto:md5(Key),
+    Index.
 
 get_matching_pool(Index, Map, Interval) ->
     % Assumption is that the interval is divided evenly among the pools.
