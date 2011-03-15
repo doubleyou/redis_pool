@@ -80,7 +80,7 @@ Active forks:
 
         Key = binary()
         Opts = list()
-        Callback = {M,F,A} | fun() | {fun(), A}
+        Callback = {M,F,A} | {M, F} | fun()
         M = atom()
         F = atom()
         A = list()
@@ -100,6 +100,8 @@ Active forks:
 
     redis_pool:start_link(Opts, PoolSize) -> ok | {error, Reason}
     redis_pool:start_link(Name, Opts, PoolSize) -> ok | {error, Reason}
+    redis:start_link(Opts, PoolSize) -> ok | {error, Reason}
+    redis:start_link(Name, Opts, PoolSize) -> ok | {error, Reason}
     
       Types:
         
@@ -131,8 +133,7 @@ Active forks:
 
         Sepcify the db to use.  Default is 0.
 
-      Name represents the name of the pool you are creating, by default
-      it's redis_pool.
+      Name represents the name of the pool you are creating.
       
     redis_pool:info() -> term()
     redis_pool:info(Name) -> term()
