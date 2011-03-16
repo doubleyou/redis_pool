@@ -33,7 +33,7 @@
 start() ->
     application:start(sasl),
     application:start(crypto),
-    application:start(redis).
+    application:start(redis_pool).
 
 start(_Type, _StartArgs) ->
     redis_sup:start_link().

@@ -1,4 +1,4 @@
-{application, redis, [
+{application, redis_pool, [
     {description, "Erlang redis client"},
     {vsn, "1.0"},
     {modules, [
