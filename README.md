@@ -90,7 +90,7 @@ Active forks:
     {ok,<0.50.0>}
     2> redis_pool:q(pool, [<<"PUBLISH">>, <<"foo">>, <<"sandwich">>]).
     0
-    3> redis_subscriber:subscribe(<<"foo">>, [], fun(Val) -> io:format("recv'd ~p~n", [Val]) end).
+    3> redis_subscriber:subscribe(<<"foo">>, fun(Val) -> io:format("recv'd ~p~n", [Val]) end, []).
     {ok,<0.65.0>}
     4> redis_pool:q(pool, [<<"PUBLISH">>, <<"foo">>, <<"sandwich">>]).
     recv'd {message,<<"foo">>,<<"sandwich">>}
